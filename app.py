@@ -1,21 +1,21 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 import mysql.connector
 
 app = Flask(__name__)
 
-#Database Connection
+#Database connection     
 def get_db_connection():
     return mysql.connector.connect(
         host='localhost',
-        database='store',
-        user='user',
+        database='clothing_store',
+        user='root',
         password='password'
     )
 
 #Home Page
 @app.route('/')
 def home():
-    return render_template('home.htm')
+    return render_template('home.html')
 
 #Products Page
 @app.route('/products')
