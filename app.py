@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 
 #Application and Database Setup
-app = Flask(__name__)
+app = Flask(__name__, static_folder='assets')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@loacalhost/online_store'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -45,7 +45,7 @@ def setup_database():
 #Home Page
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('index.html')
 
 #Products Page
 @app.route('/products')
@@ -116,11 +116,28 @@ def add_to_cart():
         return jsonify({'error': 'Failed to add product to cart', 'details': str(e)}), 500
 
 #Checkout Page
+@app.route('/checkout', methods=['POST'])
 def checkout():
-    cart_data = request.json['cart']
-    total_amount = request.json['total']
-    #Logic to handle order processing, payment, and inventory updates
-    return jsonify({'status': 'Order processed succesfully', 'total': total_amount})
+    customer_id = session.get('customer_id')
+
+    if not customer_id:
+        return jsonify({'error': 'You need to be logged in to checkout'}), 401
+    
+    #Retrieve cutsomers shopping cart
+    cart = ShoppingCart.query.filter_by(CustomerID=customer_id).first()
+    if not cart: return jsonify({'error': 'Cart is empty'}), 400
+
+    cart_items = CartItem.query.filter_by(CartID=cart.CartID).all()
+    if not cart_items: return jsonify({'error': 'Cart is empty'}), 400
+
+    #Empty the cart and reset the total amount
+    for item in cart_items:
+        db.session.delete(item)
+
+    cart.TotalAmount = 0
+    db.session.commit()
+
+    return jsonify({'sucess': 'Checkout completed sucessufully'}), 200
 
 #Customer Profile Page
 @app.route('/profile')
@@ -131,6 +148,20 @@ def profile():
     customer = cursor.fetchone()
     db.close()
     return render_template('profile.html', customer=customer)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Handle login logic here
+        return redirect(url_for('account'))
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # Handle registration logic here
+        return redirect(url_for('login'))
+    return render_template('register.html')
 
 #Running the app
 if __name__ == '__main__':

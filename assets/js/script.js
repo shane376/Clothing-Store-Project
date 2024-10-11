@@ -1,32 +1,30 @@
 //Handle add to cart functionality
 function addToCart(productId) {
-    let quantity = 1;
     fetch('/add_to_cart', {
         method: 'POST',
         headers: {
             'content-Type': 'application/json'
         },
-        body: JSON.stringify({product_id: productId, quantity: quantity})
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: 1
+        })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.status)
-    });
+        alert(data.status ? 'Product added to cart!' : data.error);
+    })
+    .catch(error => console.error('Error adding product to cart:', error));
 }
 
 //Handle checkout functionality
 function checkout() {
-    let cartData = {};
-    let totalAmount = 100;
     fetch('/checkout', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({cart: cartData, total: totalAmount})
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.status);
-    });
+        alert(data.status ? 'Checkout sucessuful!' : data.error);
+    })
+    .catch(error => console.error('Error during checkout:', error));
 }
